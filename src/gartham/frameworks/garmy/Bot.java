@@ -11,6 +11,10 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 
 public class Bot {
 	private final JDA bot;
+	
+	public JDA getBot() {
+		return bot;
+	}
 
 	public Bot(JDA bot) {
 		this.bot = bot;
