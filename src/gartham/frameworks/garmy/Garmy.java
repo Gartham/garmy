@@ -2,10 +2,13 @@ package gartham.frameworks.garmy;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -18,6 +21,7 @@ import net.dv8tion.jda.api.exceptions.RateLimitedException;
 
 public class Garmy {
 	private final BlockingQueue<Bot> bots = new LinkedBlockingQueue<>();
+	private final Set<Bot> fullbots = new HashSet<>();
 	private ScheduledExecutorService ses = Executors.newScheduledThreadPool(25);
 
 	public void setExecutor(ScheduledExecutorService ses) {
@@ -25,16 +29,25 @@ public class Garmy {
 	}
 
 	public void add(Bot bot) {
-		bots.add(bot);
+		if (fullbots.add(bot))
+			bots.add(bot);
 	}
 
 	public List<String> add(File tokens) throws FileNotFoundException {
-		try (Scanner s = new Scanner(tokens)) {
+		return add(new Scanner(tokens));
+	}
+
+	public List<String> add(InputStream tokens) {
+		return add(new Scanner(tokens));
+	}
+
+	public List<String> add(Scanner tokens) {
+		try (tokens) {
 			List<String> failures = null;
-			while (s.hasNextLine()) {
+			while (tokens.hasNextLine()) {
 				String line = null;
 				try {
-					line = s.nextLine();
+					line = tokens.nextLine();
 					add(line);
 				} catch (LoginException e) {
 					if (failures == null)
@@ -65,7 +78,7 @@ public class Garmy {
 	}
 
 	public void add(String token) throws LoginException {
-		bots.add(new Bot(token));
+		add(new Bot(token));
 	}
 
 	public void simuRun(Action... actions) {
@@ -79,6 +92,11 @@ public class Garmy {
 				}
 			});
 		}
+	}
+
+	public void awaitReady() throws InterruptedException {
+		for (Bot b : bots)
+			b.awaitReady();
 	}
 
 	private void simuRun(Bot bot, Action a) throws InterruptedException {
@@ -151,6 +169,7 @@ public class Garmy {
 				bots.add(bot);
 				System.err.println("Error on: " + bot.getBot().getSelfUser().getAsTag());
 				e.printStackTrace();
+				break;
 			}
 		}
 	}
@@ -159,5 +178,13 @@ public class Garmy {
 		Thread t = new Thread(r);
 		t.setDaemon(true);
 		return t;
+	}
+
+	public Bot[] getBots() {
+		return fullbots.toArray(new Bot[fullbots.size()]);
+	}
+
+	public int size() {
+		return fullbots.size();
 	}
 }
