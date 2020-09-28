@@ -23,25 +23,36 @@ public class Garmy {
 	private final BlockingQueue<Bot> bots = new LinkedBlockingQueue<>();
 	private final Set<Bot> fullbots = new HashSet<>();
 	private ScheduledExecutorService ses = Executors.newScheduledThreadPool(25);
+	private long counter;
 
 	public void setExecutor(ScheduledExecutorService ses) {
+		if (off)
+			throw new IllegalStateException();
 		this.ses = ses;
 	}
 
 	public void add(Bot bot) {
+		if (off)
+			throw new IllegalStateException();
 		if (fullbots.add(bot))
 			bots.add(bot);
 	}
 
 	public List<String> add(File tokens) throws FileNotFoundException {
+		if (off)
+			throw new IllegalStateException();
 		return add(new Scanner(tokens));
 	}
 
 	public List<String> add(InputStream tokens) {
+		if (off)
+			throw new IllegalStateException();
 		return add(new Scanner(tokens));
 	}
 
 	public List<String> add(Scanner tokens) {
+		if (off)
+			throw new IllegalStateException();
 		try (tokens) {
 			List<String> failures = null;
 			while (tokens.hasNextLine()) {
@@ -60,10 +71,14 @@ public class Garmy {
 	}
 
 	public List<String> add(String... tokens) {
+		if (off)
+			throw new IllegalStateException();
 		return add(List.of(tokens));
 	}
 
 	public List<String> add(Collection<String> tokens) {
+		if (off)
+			throw new IllegalStateException();
 		List<String> failures = null;
 		for (String s : tokens) {
 			try {
@@ -78,10 +93,14 @@ public class Garmy {
 	}
 
 	public void add(String token) throws LoginException {
+		if (off)
+			throw new IllegalStateException();
 		add(new Bot(token));
 	}
 
 	public void simuRun(Action... actions) {
+		if (off)
+			throw new IllegalStateException();
 		for (Action a : actions) {
 			ses.submit(() -> {
 				try {
@@ -95,6 +114,8 @@ public class Garmy {
 	}
 
 	public void awaitReady() throws InterruptedException {
+		if (off)
+			throw new IllegalStateException();
 		for (Bot b : bots)
 			b.awaitReady();
 	}
@@ -134,6 +155,8 @@ public class Garmy {
 	}
 
 	public void sequRun(Action... actions) {
+		if (off)
+			throw new IllegalStateException();
 		try {
 			for (Action a : actions) {
 				Bot bot = bots.take();
@@ -174,17 +197,30 @@ public class Garmy {
 		}
 	}
 
-	public Thread getThread(Runnable r) {
+	private Thread getThread(Runnable r) {
 		Thread t = new Thread(r);
 		t.setDaemon(true);
 		return t;
 	}
 
 	public Bot[] getBots() {
+		if (off)
+			throw new IllegalStateException();
 		return fullbots.toArray(new Bot[fullbots.size()]);
 	}
 
 	public int size() {
+		if (off)
+			throw new IllegalStateException();
 		return fullbots.size();
 	}
+
+	private volatile boolean off;
+
+	public void shutdown() throws InterruptedException {
+		for (int i = 0; i < size(); i++)
+			bots.take().getBot().shutdown();
+		off = true;
+	}
+
 }
