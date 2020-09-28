@@ -27,5 +27,9 @@ public class Bot {
 	public Bot(String token, GatewayIntent... intents) throws LoginException {
 		bot = JDABuilder.create(Arrays.asList(intents)).setToken(token).build();
 	}
+	
+	public void awaitReady() throws InterruptedException {
+		bot.awaitReady();
+	}
 
 }
