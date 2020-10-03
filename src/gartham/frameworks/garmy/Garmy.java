@@ -17,6 +17,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.security.auth.login.LoginException;
 
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.exceptions.RateLimitedException;
 
 public class Garmy {
@@ -123,7 +125,7 @@ public class Garmy {
 	private void simuRun(Bot bot, Action a) throws InterruptedException {
 		while (true)
 			try {
-				a.run(bot.getBot());
+				a.run(bot);
 				bots.add(bot);
 				break;
 			} catch (RateLimitedException e1) {
@@ -169,7 +171,7 @@ public class Garmy {
 	private void sequRun(Bot bot, Action a) throws InterruptedException {
 		while (true) {
 			try {
-				a.run(bot.getBot());
+				a.run(bot);
 				bots.add(bot);
 				break;
 			} catch (RateLimitedException e) {
