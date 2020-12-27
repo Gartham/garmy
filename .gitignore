@@ -24,3 +24,4 @@ $RECYCLE.BIN/
 /bin/
 
 *.jar
+/src/gartham/test
